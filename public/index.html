@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <title>Demo Node + Express</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+      body { font-family: system-ui, sans-serif; margin: 2rem; }
+      .card { border: 1px solid #ddd; padding: 1rem; border-radius: .5rem; max-width: 640px; }
+      a.button { display: inline-block; padding: .5rem .75rem; border: 1px solid #333; border-radius: .5rem; text-decoration: none; }
+    </style>
+  </head>
+  <body>
+    <h1>Bienvenido 👋</h1>
+    <div class="card">
+      <p>Esta es una página estática servida por Express.</p>
+      <p>
+        <a class="button" href="/contact.html">Ir al formulario de contacto</a>
+      </p>
+      <p id="status"></p>
+    </div>
+
+    <script>
+      // Solo para comprobar que el backend responde:
+      fetch('/api/health')
+        .then(r => r.json())
+        .then(d => document.getElementById('status').textContent = 'API status: ' + d.status)
+        .catch(() => document.getElementById('status').textContent = 'API no disponible');
+    </script>
+  </body>
+</html>
