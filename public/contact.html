@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <title>Contacto</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+      body { font-family: system-ui, sans-serif; margin: 2rem; }
+      form { max-width: 520px; display: grid; gap: .75rem; }
+      input, textarea, button { padding: .5rem; font-size: 1rem; }
+      .ok { color: #0a0; }
+      .err { color: #a00; }
+    </style>
+  </head>
+  <body>
+    <h1>Contacto</h1>
+    <form id="f">
+      <input name="name" placeholder="Tu nombre" required />
+      <input name="email" type="email" placeholder="Tu email" required />
+      <textarea name="message" placeholder="Mensaje" required></textarea>
+      <button>Enviar</button>
+      <p id="msg"></p>
+    </form>
+
+    <p><a href="/">Volver</a></p>
+
+    <script>
+      const f = document.getElementById('f');
+      const msg = document.getElementById('msg');
+      f.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        msg.textContent = 'Enviando...';
+        const formData = new FormData(f);
+        const payload = Object.fromEntries(formData.entries());
+        const res = await fetch('/api/contact', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (res.ok) {
+          msg.className = 'ok';
+          msg.textContent = `Enviado con id ${data.id}`;
+          f.reset();
+        } else {
+          msg.className = 'err';
+          msg.textContent = data.error || 'Error';
+        }
+      });
+    </script>
+  </body>
+</html>
