@@ -1,14 +1,15 @@
 1) Preparación del repositorio
-Crea un repo vacío en GitHub, por ejemplo ghflow-node-web.
+
+Crea un repo vacío en GitHub, por ejemplo, ghflow-node-web.
+
 Clona y entra a la carpeta:
 git clone https://github.com/<tu-usuario>/ghflow-node-web.git
 cd ghflow-node-web
 2) Estructura base + código mínimo
 2.1. Crear carpetas
-mkdir src, public, .github\workflows
-2.2. Crear los archivos de prueba
-package.json
-#########################################################
+mkdir -p src public .github/workflows
+2.2. package.json
+Crea el archivo package.json con este contenido:
 {
   "name": "ghflow-node-web",
   "version": "1.0.0",
@@ -29,13 +30,10 @@ package.json
     "nodemon": "^3.1.0"
   }
 }
-
-#########################################################
-Instala dependencias y genera package-lock.json
+Instala dependencias y genera package-lock.json:
 npm install
 2.3. Servidor Express
 src/app.js
-#########################################################
 const express = require('express');
 const path = require('path');
 
@@ -46,7 +44,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Servir estáticos desde /public
-app.use(express.static(path.join(__dirname, '../public'))); // express.static, doc oficial. 
+app.use(express.static(path.join(__dirname, '../public'))); // express.static, doc oficial.
 
 // Endpoint mínimo de salud
 app.get('/api/health', (req, res) => {
@@ -54,20 +52,16 @@ app.get('/api/health', (req, res) => {
 });
 
 module.exports = app;
-
-#########################################################
 src/server.js
-#########################################################
 const app = require('./app');
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Servidor listo: http://localhost:${PORT}`);
 });
-#########################################################
 2.4. Web simple
+
 public/index.html
-#########################################################
 <!doctype html>
 <html lang="es">
   <head>
@@ -99,11 +93,11 @@ public/index.html
     </script>
   </body>
 </html>
-
-#########################################################
 2.5. Tests iniciales
+
+Crea la carpeta __tests__ y el archivo:
+
 __tests__/health.test.js
-#########################################################
 const request = require('supertest');
 const app = require('../src/app');
 
@@ -114,9 +108,9 @@ describe('Health endpoint', () => {
     expect(res.body).toEqual({ status: 'ok' });
   });
 });
-#########################################################
 2.6. GitHub Actions (CI)
-#########################################################
+
+.github/workflows/ci.yml
 name: ci
 
 on:
@@ -136,23 +130,18 @@ jobs:
           cache: 'npm'
       - run: npm ci
       - run: npm test
-
-#########################################################
 2.7. .gitignore
-#########################################################
+
+.gitignore
 node_modules/
 coverage/
 .env
-#########################################################
 2.8. Primer commit y push
-#########################################################
 git add .
 git commit -m "chore: bootstrap Node/Express app, static page, tests and CI"
 git branch -M main
 git remote add origin https://github.com/<tu-usuario>/ghflow-node-web.git
 git push -u origin main
-#########################################################
-
 3) Protege main y exige checks
 
 En GitHub: Settings → Branches → Add branch protection rule:
@@ -160,10 +149,6 @@ En GitHub: Settings → Branches → Add branch protection rule:
 Branch name pattern: main
 
 Marca Require a pull request before merging y Require status checks to pass before merging.
-
-El check ci aparecerá después de que el workflow haya corrido al menos una vez; si aún no lo ves, crea un PR o empuja un commit, 
-espera a que finalice y vuelve a esta pantalla.
-
 4) Flujo práctico: issue → branch → PR (con cambios reales)
 4.1. Crea un issue
 
@@ -178,15 +163,10 @@ Endpoint POST /api/contact que valide campos y devuelva {id,...}.
 Tests con Supertest (201 para válido, 400 si faltan campos).
 
 Cierra el issue automáticamente con fixes #<número> en el PR.
-
 4.2. Crea la rama de trabajo
-#########################################################
 git switch -c feat/contact-form
-#########################################################
 4.3. Implementa la página de contacto y el endpoint
-
 public/contact.html (nuevo archivo)
-#########################################################
 <!doctype html>
 <html lang="es">
   <head>
@@ -239,11 +219,7 @@ public/contact.html (nuevo archivo)
     </script>
   </body>
 </html>
-
-#########################################################
-
-src/app.js
-#########################################################
+src/app.js (reemplaza por esta versión con el endpoint nuevo)
 const express = require('express');
 const path = require('path');
 
@@ -272,11 +248,7 @@ app.post('/api/contact', (req, res) => {
 });
 
 module.exports = app;
-
-#########################################################
-
 __tests__/contact.test.js (nuevo)
-#########################################################
 const request = require('supertest');
 const app = require('../src/app');
 
@@ -297,42 +269,86 @@ describe('Contact endpoint', () => {
     expect(res.body).toHaveProperty('id');
   });
 });
-
-#########################################################
-
 4.4. Commit y push de la rama
-#########################################################
 git add .
 git commit -m "feat: contacto UI + endpoint + tests (fixes #<NUM_ISSUE>)"
 git push -u origin feat/contact-form
-
-#########################################################
-
 4.5. Crea el Pull Request hacia main
 
-El workflow ci correrá tests.
+Ve a GitHub y abre tu repo en el navegador:
+https://github.com/<tu-usuario>/ghflow-node-web
 
-Con status checks requeridos, no podrás mergear si fallan. 
-GitHub Docs
-+1
+GitHub detectará la rama nueva y mostrará el aviso “Compare & pull request”. Haz clic allí.
+(Si no lo ves: Pull requests → New pull request → base: main y compare: feat/contact-form.)
 
-Al fusionar, el issue se cerrará automáticamente por el “fixes #…”. 
-GitHub Docs
-+1
+Llena los datos del PR
 
-Si no ves el check ci para marcarlo como requerido, asegúrate de que el workflow ya corrió 
-al menos una vez y vuelve a la regla de protección.
+Título: deja el sugerido o:
+feat: contacto UI + endpoint + tests (fixes #1)
 
-### Cambios
-- Nueva página estática `/contact.html`.
-- Endpoint `POST /api/contact` con validación de campos (201/400).
-- Pruebas con Jest + Supertest.
-- CI con GitHub Actions (`.github/workflows/ci.yml`).
+Descripción: explica qué hiciste (formulario de contacto, endpoint /api/contact, pruebas).
 
-### Compatibilidad
-- Sin cambios incompatibles (breaking changes).
+Importante: asegúrate de incluir fixes #1 (o el número de issue correcto) para cierre automático al hacer merge.
 
-### Cómo correr
-- npm ci
-- npm test
-- npm start (http://localhost:3000)
+Revisa los checks de CI
+
+Tras crear el PR, GitHub Actions ejecutará el workflow ci.yml.
+
+Verás un bloque con All checks have passed si todo está bien.
+
+Si falla, entra a los logs, corrige en tu rama y git add/commit/push; el PR se actualiza solo.
+
+Como main está protegido, no podrás hacer merge si el check falla.
+
+Haz el merge
+
+Cuando los checks pasen, usa el botón verde Merge pull request.
+
+Puedes elegir Squash and merge (un solo commit limpio).
+
+Confirma el merge; el código de feat/contact-form pasa a main.
+
+Qué ocurre después
+
+El issue con fixes #1 se cierra automáticamente.
+
+El workflow ci se ejecuta otra vez por el push a main.
+
+Ya puedes crear un release v1.0.0 en la pestaña Releases.
+5) Publica un reléase desde la UI de GitHub
+
+5.1 En tu repo: Releases → Draft a new release.
+
+Choose a tag: escribe v1.0.0 y selecciona Create new tag on publish (target: main).
+
+Release title: v1.0.0 (o “Primera versión”).
+
+Release notes: pulsa Auto-generate release notes y edita si quieres o pega algo como:
+
+Nueva página /contact.html
+
+Endpoint POST /api/contact
+
+Tests con Jest + Supertest
+
+CI con GitHub Actions (workflow: ci)
+
+5.2 Publish release.
+Para una siguiente entrega compatible: v1.1.0. Para un fix: v1.0.1.
+6) Cómo corre esto localmente
+
+Instalar dependencias
+npm install         # primera vez (o tras clonar)
+# o, si vienes de CI y tienes package-lock.json:
+# npm ci
+Ejecutar tests
+npm test
+Levantar el servidor
+npm run dev   # con nodemon (recarga en caliente)
+# o
+npm start     # node "normal"
+Comprobar en el navegador
+
+App: http://localhost:3000/
+
+Form: http://localhost:3000/contact.html
